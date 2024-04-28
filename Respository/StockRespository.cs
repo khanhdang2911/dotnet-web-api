@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using dotnet_web_api.Data;
 using dotnet_web_api.Dtos.Stock;
+using dotnet_web_api.Helpers;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Mappers;
 using dotnet_web_api.Models;
@@ -19,44 +20,74 @@ namespace dotnet_web_api.Respository
         {
             _context=context;
         }
-        public void Create(CreateStockRequestDto stockRequestDto)
+
+        public async Task<bool> CheckExist(int stockId)
         {
-            _context.stocks.Add(stockRequestDto.ToStockFromRequest());
-            _context.SaveChanges();
-        }
-        public void DeleteById(int id)
-        {
-            var stock=_context.stocks.Find(id);
-            _context.stocks.Remove(stock);
-        }
-        public async Task<List<Stock>> GetAllSAsync()
-        {
-            var stocks=await _context.stocks.ToListAsync();
-            return stocks;
+            return await _context.stocks.AnyAsync(s=>s.Id==stockId);
         }
 
-        public async Task<Stock> GetStockAsync(int id)
+        public async Task<Stock> Create(Stock stockModel)
         {
-            var stock=await _context.stocks.SingleOrDefaultAsync(s=>s.Id==id);
+            await _context.AddAsync(stockModel);
+            await _context.SaveChangesAsync();
+            return stockModel;
+        }
+
+        public async Task<Stock?> DeleteById(int id)
+        {
+            var stock=_context.stocks.Find(id);
+            if(stock==null)
+            {
+                return null;
+            }
+            _context.stocks.Remove(stock);
+            await _context.SaveChangesAsync();
             return stock;
         }
 
-        public bool Update(int id,UpdateStockRequestDto updateStockRequestDto)
+        public async Task<List<Stock>> GetAllSAsync(ObjectQuery query)
         {
-            var stock=_context.stocks.SingleOrDefault(s=>s.Id==id);
-            if(stock!=null)
+            var stocks=_context.stocks.Include(s=>s.Comments).AsQueryable();
+            if(!string.IsNullOrWhiteSpace(query.CompanyName))
             {
-                _context.Entry(stock).State = EntityState.Modified;
+                stocks=stocks.Where(s=>s.CompanyName.Contains(query.CompanyName));
+            }
+            if(!string.IsNullOrWhiteSpace(query.SortBy))
+            {
+                if(query.SortBy=="LastDiv")
+                {
+                    stocks=query.IsDescending ? stocks.OrderByDescending(s=>s.LastDiv) : 
+                            stocks.OrderBy(s=>s.LastDiv);
+                }
+            }
+            // pagination
+            stocks=stocks.Skip((query.PageNumber-1)*query.PageSize).Take(query.PageSize);
+
+            return await stocks.ToListAsync();
+        }
+
+        public async Task<Stock?> GetStockAsync(int id)
+        {
+            var stock=await _context.stocks.Include(s=>s.Comments).SingleOrDefaultAsync(s=>s.Id==id);
+            return stock;
+        }
+
+        public async Task<Stock?> Update(int id,UpdateStockRequestDto updateStockRequestDto)
+        {
+            var stock=await _context.stocks.FirstOrDefaultAsync(s=>s.Id==id);
+            if(stock==null)
+            {
+                return null;
+            }
+
+            _context.Entry(stock).State = EntityState.Modified;        
                 stock.CompanyName=updateStockRequestDto.CompanyName;
                 stock.Purchase=updateStockRequestDto.Purchase;
                 stock.LastDiv=updateStockRequestDto.LastDiv;
                 stock.Industry=updateStockRequestDto.Industry;
                 stock.MarketCap=updateStockRequestDto.MarketCap;
-                _context.SaveChanges();
-            }
-            return false;
+            _context.SaveChanges();
+            return stock;
         }
-
-       
     }
 }
