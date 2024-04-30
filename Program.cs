@@ -1,7 +1,10 @@
 using dotnet_web_api.Data;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Respository;
+using dotnet_web_api.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,10 +17,32 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<ApplicationDBContext>(options=>{
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
-
+// jwt
+builder.Services.AddAuthentication(options=>{
+    options.DefaultAuthenticateScheme=
+    options.DefaultChallengeScheme=
+    options.DefaultForbidScheme=
+    options.DefaultSignInScheme=
+    options.DefaultSignOutScheme=JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(
+    options =>{
+        options.TokenValidationParameters=new TokenValidationParameters()
+        {
+            ValidateIssuer=true,
+            ValidIssuer=builder.Configuration["JWT:Issuer"],
+            ValidateAudience=true,
+            ValidAudience=builder.Configuration["JWT:Audience"],
+            ValidateIssuerSigningKey=true,
+            IssuerSigningKey=new SymmetricSecurityKey(
+                System.Text.Encoding.UTF8.GetBytes(builder.Configuration["JWT:SigningKey"])
+            )
+        };
+    }
+);
+// 
 builder.Services.AddScoped<IStockRespository,StockRespository>();
 builder.Services.AddScoped<IcommentRespository,CommentRespository>();
-
+builder.Services.AddScoped<ITokenService,TokenService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -48,6 +73,9 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
+
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.Run();
 

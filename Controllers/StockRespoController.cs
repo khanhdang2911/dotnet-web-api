@@ -7,6 +7,7 @@ using dotnet_web_api.Dtos.Stock;
 using dotnet_web_api.Helpers;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Mappers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,6 +25,7 @@ namespace dotnet_web_api.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> GetAll([FromQuery]ObjectQuery query)
         {
             var stocks=await _iStockRespo.GetAllSAsync(query);

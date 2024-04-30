@@ -15,5 +15,8 @@ namespace dotnet_web_api.Data
             }
             public DbSet<Stock> stocks{set; get; }
             public DbSet<Comment> comments{set; get; }
+
+            public DbSet<Users> users{set; get; }
+            public DbSet<RefreshToken> refreshTokens{set;get;}
     }
 }

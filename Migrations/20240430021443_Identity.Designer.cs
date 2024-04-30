@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using dotnet_web_api.Data;
 
@@ -11,9 +12,11 @@ using dotnet_web_api.Data;
 namespace dotnet_web_api.Migrations
 {
     [DbContext(typeof(ApplicationDBContext))]
-    partial class ApplicationDBContextModelSnapshot : ModelSnapshot
+    [Migration("20240430021443_Identity")]
+    partial class Identity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -49,28 +52,6 @@ namespace dotnet_web_api.Migrations
                     b.HasIndex("StockId");
 
                     b.ToTable("Comment");
-                });
-
-            modelBuilder.Entity("dotnet_web_api.Models.RefreshToken", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Token")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("refreshTokens");
                 });
 
             modelBuilder.Entity("dotnet_web_api.Models.Stock", b =>
@@ -140,17 +121,6 @@ namespace dotnet_web_api.Migrations
                         .HasForeignKey("StockId");
 
                     b.Navigation("Stock");
-                });
-
-            modelBuilder.Entity("dotnet_web_api.Models.RefreshToken", b =>
-                {
-                    b.HasOne("dotnet_web_api.Models.Users", "Users")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("dotnet_web_api.Models.Stock", b =>
