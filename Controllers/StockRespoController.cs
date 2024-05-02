@@ -17,17 +17,28 @@ namespace dotnet_web_api.Controllers
     [Route("api/[controller]")]
     public class StockRespoController : ControllerBase
     {
+        private readonly IAuthorizationService _authorService;
+        private readonly ApplicationDBContext _context;
         private readonly IStockRespository _iStockRespo;
         // private readonly ApplicationDBContext _context;
-        public StockRespoController(IStockRespository iStockRespo)
+        public StockRespoController(IStockRespository iStockRespo,IAuthorizationService authorService,ApplicationDBContext context)
         {
             _iStockRespo=iStockRespo;
+            _authorService=authorService;
+            _context=context;
         }
 
         [HttpGet]
         [Authorize]
         public async Task<IActionResult> GetAll([FromQuery]ObjectQuery query)
         {
+            var userId=User.Claims.First(x=>x.Type=="Id").Value;
+            var user=_context.users.Find(int.Parse(userId));
+            var check=await _authorService.AuthorizeAsync(User,user,"InAge");
+            if(!check.Succeeded)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
             var stocks=await _iStockRespo.GetAllSAsync(query);
             var stockDtos=stocks.Select(s=>s.ToStockDto()).ToList();
             return Ok(stockDtos);

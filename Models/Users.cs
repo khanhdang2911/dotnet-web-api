@@ -18,5 +18,8 @@ namespace dotnet_web_api.Models
         [MaxLength(20,ErrorMessage ="do dai toi da la 20 ki tu")]
         public string Username{set;get;}=string.Empty;
         public string Password{set;get;}=string.Empty; 
+        public DateTime BirthDay{set;get;}
+        public List<UserRole> userRoles{set;get;}=new List<UserRole>();
+        
     }
 }

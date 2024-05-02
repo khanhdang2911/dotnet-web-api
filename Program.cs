@@ -1,15 +1,15 @@
 using dotnet_web_api.Data;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Respository;
+using dotnet_web_api.Security.Requirements;
 using dotnet_web_api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
@@ -39,7 +39,17 @@ builder.Services.AddAuthentication(options=>{
         };
     }
 );
-// 
+//
+// Authorization
+builder.Services.AddAuthorization(options=>{
+    options.AddPolicy("InAge",policyBuilder=>{
+        policyBuilder.RequireRole("Admin");
+        policyBuilder.AddRequirements(new InAgeSmall2001Requirements(1997,2001));
+    });
+});
+//  
+// Dang ki dich vu authorization service
+builder.Services.AddTransient<IAuthorizationHandler,AppAuthorizationHandler>();
 builder.Services.AddScoped<IStockRespository,StockRespository>();
 builder.Services.AddScoped<IcommentRespository,CommentRespository>();
 builder.Services.AddScoped<ITokenService,TokenService>();

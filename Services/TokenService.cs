@@ -6,6 +6,7 @@ using dotnet_web_api.Data;
 using dotnet_web_api.Dtos.Token;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Models;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 namespace dotnet_web_api.Services
@@ -25,12 +26,17 @@ namespace dotnet_web_api.Services
 
         public string CreateToken(Users users)
         {
+            var Userroles=_context.users.Include(ur=>ur.userRoles).ThenInclude(r=>r.Role).Where(x=>x.Id==users.Id).First();
             var claims=new List<Claim>()
             {
                 new Claim(JwtRegisteredClaimNames.Email,users.Email),
                 new Claim(JwtRegisteredClaimNames.GivenName,users.Username),
                 new Claim("Id",users.Id.ToString())
             };
+            foreach(var item in Userroles.userRoles)
+            {
+                claims.Add(new Claim(ClaimTypes.Role,item.Role.RoleName));
+            }
             var creds=new SigningCredentials(_key,SecurityAlgorithms.HmacSha512Signature);
             var tokenDescriptor=new SecurityTokenDescriptor()
             {

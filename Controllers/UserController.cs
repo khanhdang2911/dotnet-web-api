@@ -8,6 +8,7 @@ using dotnet_web_api.Dtos.Token;
 using dotnet_web_api.Dtos.Users;
 using dotnet_web_api.Interfaces;
 using dotnet_web_api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dotnet_web_api.Controllers
@@ -18,11 +19,13 @@ namespace dotnet_web_api.Controllers
     {
         private readonly ApplicationDBContext _context;
         
+        
         private readonly ITokenService _tokenService;
         public UserController(ApplicationDBContext context,ITokenService tokenService)
         {
             _context=context;
             _tokenService=tokenService;
+            
         }
 
         [HttpPost("Register")]
